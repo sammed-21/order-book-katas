@@ -20,9 +20,7 @@ export const WsEchoClient = () => {
     const socket = new WebSocket("wss://api.hyperliquid.xyz/ws");
 
     socket.onopen = () => {
-      setStatus("connecting");
       console.log("connected to the hyperliquid websocket");
-      // Subscribe to ETH trades
       setStatus("open");
       socket.send(
         JSON.stringify({
@@ -64,7 +62,6 @@ export const WsEchoClient = () => {
 
   return (
     <div>
-      {" "}
       <h1 className="text-xl font-bold mb-4">Hyperliquid Trade Stream</h1>
       <span
         className={`inline-block rounded px-2 py-0.5 text-xs font-mono ${statusColor}`}
