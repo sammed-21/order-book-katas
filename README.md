@@ -151,7 +151,7 @@ If you're building:
 - trading dashboard
 - realtime DeFi infrastructure
 
-...and want to talk, my DMs are open on Twitter.
+and want to talk, my DMs are open on Twitter.
 
 ---
 
