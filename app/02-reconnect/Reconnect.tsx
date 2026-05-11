@@ -63,9 +63,9 @@ export const Reconnect = () => {
   return (
     <div className="p-6 max-w-3xl mx-auto w-full">
       <div className="flex items-center gap-3 mb-4">
-        <h1 className="text-xl font-bold">
+        <h2 className="text-xl font-bold">
           Reconnecting Socket — Hyperliquid ETH Trades
-        </h1>
+        </h2>
         <span
           className={`inline-block rounded px-2 py-0.5 text-xs font-mono ${STATUS_COLOR[status]}`}
         >

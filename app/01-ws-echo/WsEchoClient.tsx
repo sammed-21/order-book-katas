@@ -62,7 +62,7 @@ export const WsEchoClient = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Hyperliquid Trade Stream</h1>
+      <h2 className="text-xl font-bold mb-4">Hyperliquid Trade Stream</h2>
       <span
         className={`inline-block rounded px-2 py-0.5 text-xs font-mono ${statusColor}`}
       >
