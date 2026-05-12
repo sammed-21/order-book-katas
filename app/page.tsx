@@ -13,6 +13,12 @@ const routes = [
     description:
       "Wraps the WebSocket with reconnect handling and a simulated drop flow.",
   },
+  {
+    title: "Sequence gap",
+    href: "/03-seq-gap",
+    description:
+      "L2 book stream with reconnects so you can think about gaps and resync.",
+  },
 ];
 
 export default function Home() {
