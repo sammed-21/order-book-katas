@@ -1,6 +1,11 @@
 "use client";
 
-import { IconHome, IconPlugConnected, IconRefresh } from "@tabler/icons-react";
+import {
+  IconHome,
+  IconListNumbers,
+  IconPlugConnected,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 
 const links = [
@@ -23,6 +28,13 @@ const links = [
     href: "/02-reconnect",
     icon: (
       <IconRefresh className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  },
+  {
+    label: "Sequence gap",
+    href: "/03-seq-gap",
+    icon: (
+      <IconListNumbers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
     ),
   },
 ];
