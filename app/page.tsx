@@ -19,6 +19,12 @@ const routes = [
     description:
       "L2 book stream with reconnects so you can think about gaps and resync.",
   },
+  {
+    title: "Sorted side",
+    href: "/04-sorted-side",
+    description:
+      "A decimal-safe RBTree demo for keeping bids and asks in sorted order.",
+  },
 ];
 
 export default function Home() {
