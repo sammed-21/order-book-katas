@@ -37,6 +37,15 @@ const links = [
       <IconListNumbers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
     ),
   },
+  {
+    label: "Sorted side",
+    href: "/04-sorted-side",
+    icon: (
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-neutral-200 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        04
+      </span>
+    ),
+  },
 ];
 
 export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
