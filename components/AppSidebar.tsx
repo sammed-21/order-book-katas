@@ -46,6 +46,15 @@ const links = [
       </span>
     ),
   },
+  {
+    label: "Apply delta",
+    href: "/05-apply-delta",
+    icon: (
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-neutral-200 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        05
+      </span>
+    ),
+  },
 ];
 
 export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
