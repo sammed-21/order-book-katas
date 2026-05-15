@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
-import {
-  ReconnectingSocket,
-  type Status,
-} from "../03-seq-gap/socket";
+import { ReconnectingSocket, type Status } from "../03-seq-gap/socket";
 import { Side, type Direction, type Level } from "./side";
 
 type DisplayLevel = {
@@ -40,8 +37,7 @@ const EMPTY_VIEW: BookView = {
   bids: [],
   bestAsk: null,
   bestBid: null,
-  lastAction:
-    "Waiting for a live book snapshot or a manual sample update.",
+  lastAction: "Waiting for a live book snapshot or a manual sample update.",
   spread: null,
 };
 
@@ -67,9 +63,12 @@ function isL2Level(v: unknown): v is L2Level {
   );
 }
 
-function parseL2BookPayload(
-  raw: unknown,
-): Omit<LiveSnapshotMeta, "receivedAt"> & { asks: L2Level[]; bids: L2Level[] } | null {
+function parseL2BookPayload(raw: unknown):
+  | (Omit<LiveSnapshotMeta, "receivedAt"> & {
+      asks: L2Level[];
+      bids: L2Level[];
+    })
+  | null {
   if (!raw || typeof raw !== "object") return null;
   const data = raw as Record<string, unknown>;
   const levels = data.levels;
@@ -332,9 +331,9 @@ export function SortedSide() {
             <code className="rounded bg-neutral-200 px-1 py-0.5 text-[13px] dark:bg-neutral-800">
               Side
             </code>{" "}
-            trees, so bids stay highest-first and asks stay lowest-first. Disconnect
-            if you want to experiment with manual updates without live snapshots
-            replacing them.
+            trees, so bids stay highest-first and asks stay lowest-first.
+            Disconnect if you want to experiment with manual updates without
+            live snapshots replacing them.
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -401,7 +400,9 @@ export function SortedSide() {
             Best Bid
           </p>
           <p className="mt-1 font-mono text-sm text-emerald-700 dark:text-emerald-400">
-            {view.bestBid ? `${view.bestBid.price} x ${view.bestBid.size}` : "--"}
+            {view.bestBid
+              ? `${view.bestBid.price} x ${view.bestBid.size}`
+              : "--"}
           </p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white/70 p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
@@ -409,7 +410,9 @@ export function SortedSide() {
             Best Ask
           </p>
           <p className="mt-1 font-mono text-sm text-red-700 dark:text-red-400">
-            {view.bestAsk ? `${view.bestAsk.price} x ${view.bestAsk.size}` : "--"}
+            {view.bestAsk
+              ? `${view.bestAsk.price} x ${view.bestAsk.size}`
+              : "--"}
           </p>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white/70 p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
