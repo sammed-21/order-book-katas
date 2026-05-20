@@ -138,7 +138,6 @@ export function ApplyDelta() {
     };
   }, []);
 
-  /** Manual demo: one delta at a time (same as live, but single item). */
   function applyOne(delta: Delta) {
     const next = applyDelta(bookRef.current, delta);
     bookRef.current = next;
