@@ -9,9 +9,9 @@ export default function Page() {
         </p>
         <h1 className="text-3xl font-semibold">WebSocket Echo</h1>
         <p className="max-w-2xl text-neutral-600 dark:text-neutral-300">
-          Subscribes to Hyperliquid ETH trades over the same reconnecting client
-          as the other katas, with disconnect, manual reconnect, and simulate
-          drop controls.
+          Connects to Hyperliquid&apos;s public WebSocket, subscribes to ETH trades,
+          and renders the latest 20 with a connection-status indicator. No reconnect
+          logic yet — that is Kata 02.
         </p>
       </header>
       <WsEchoClient />

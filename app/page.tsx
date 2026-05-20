@@ -25,6 +25,12 @@ const routes = [
     description:
       "A decimal-safe RBTree demo for keeping bids and asks in sorted order.",
   },
+  {
+    title: "Apply delta",
+    href: "/05-apply-delta",
+    description:
+      "Immutable applyDelta function — turn snapshot diffs into book updates.",
+  },
 ];
 
 export default function Home() {
