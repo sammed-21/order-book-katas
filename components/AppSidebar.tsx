@@ -55,6 +55,15 @@ const links = [
       </span>
     ),
   },
+  {
+    label: "rAF batcher",
+    href: "/07-raf-batcher",
+    icon: (
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-neutral-200 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        07
+      </span>
+    ),
+  },
 ];
 
 export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
