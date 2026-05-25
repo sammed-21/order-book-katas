@@ -31,6 +31,12 @@ const routes = [
     description:
       "Immutable applyDelta function — turn snapshot diffs into book updates.",
   },
+  {
+    title: "rAF batcher",
+    href: "/07-raf-batcher",
+    description:
+      "Coalesce WebSocket updates to one React render per animation frame.",
+  },
 ];
 
 export default function Home() {
