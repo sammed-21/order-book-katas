@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createRafBatcher } from "@/libs/raf-batcher";
 import { ReconnectingSocket, type Status } from "../03-seq-gap/socket";
 import {
-  applyDelta,
   applyDeltas,
   emptyBook,
   getSpread,
@@ -199,15 +198,13 @@ export function WorkerBookDemo() {
       return;
     }
 
+    const { bids, asks } = bookRef.current;
     for (let i = 0; i < count; i++) {
       const price = (2340 + (i % 5) * 0.1).toFixed(1);
-      bookRef.current = applyDelta(bookRef.current, {
-        side: "bid",
-        price,
-        size: "1",
-      });
-      workerJobsRef.current += 1;
+      bids.upsert(price, "1");
     }
+    bookRef.current = { bids, asks };
+    workerJobsRef.current += count;
     wsMessagesRef.current += count;
     snapshotRef.current = bookToSnapshot(
       bookRef.current,

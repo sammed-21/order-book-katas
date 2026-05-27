@@ -2,7 +2,7 @@
  * Runs off the main thread — parse + diff + applyDeltas live here.
  * Posts plain JSON snapshots back (no RBTree / Decimal classes).
  */
-import { applyDelta, applyDeltas, emptyBook, getSpread } from "../05-apply-delta/apply-delta";
+import { applyDeltas, emptyBook, getSpread } from "../05-apply-delta/apply-delta";
 import {
   diffSnapshot,
   snapshotFromLevels,
@@ -72,15 +72,13 @@ function handleL2(data: unknown): void {
 }
 
 function handleFlood(count: number): void {
+  const { bids, asks } = book;
   for (let i = 0; i < count; i++) {
-    workerJobs += 1;
     const price = (2340 + (i % 5) * 0.1).toFixed(1);
-    book = applyDelta(book, {
-      side: "bid",
-      price,
-      size: String(1 + (i % 3)),
-    });
+    bids.upsert(price, String(1 + (i % 3)));
   }
+  book = { bids, asks };
+  workerJobs += count;
   wsMessages += count;
   postSnapshot();
 }
