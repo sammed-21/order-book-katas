@@ -37,6 +37,12 @@ const routes = [
     description:
       "Coalesce WebSocket updates to one React render per animation frame.",
   },
+  {
+    title: "Web Worker",
+    href: "/08-worker-rt",
+    description:
+      "Offload parse and applyDeltas to a worker; main thread only paints.",
+  },
 ];
 
 export default function Home() {

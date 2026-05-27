@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRafBatcher } from "@/libs/raf-batcher";
 import { ReconnectingSocket, type Status } from "../03-seq-gap/socket";
 import {
-  applyDelta,
   applyDeltas,
   emptyBook,
   getSpread,
@@ -16,7 +15,13 @@ import {
   type SnapshotMaps,
 } from "../05-apply-delta/snapshot-diff";
 
+/** Unbatched flood paints per delta; above this only batching is safe in dev. */
+const FLOOD_UNBATCHED_MAX = 500;
+/** In-place upserts per animation frame for large synthetic floods. */
+const FLOOD_CHUNK = 2_000;
+
 type DisplayRow = { price: string; size: string };
+type ParsedL2 = NonNullable<ReturnType<typeof parseL2Book>>;
 
 const STATUS_COLOR: Record<Status, string> = {
   connecting:
@@ -66,9 +71,8 @@ export function RafBatcherDemo() {
   const bookRef = useRef<Book>(emptyBook());
   const prevSnapshotRef = useRef<SnapshotMaps | null>(null);
   const batchedRef = useRef(true);
+  const floodRafRef = useRef<number | null>(null);
 
-  // Counters live in refs — only pushed to React inside pushToReact (batched).
-  // If you setState(wsMessages) on every WS message, rAF batching is useless.
   const wsMessagesRef = useRef(0);
   const pendingWsBurstRef = useRef(0);
 
@@ -112,7 +116,29 @@ export function RafBatcherDemo() {
   useEffect(() => {
     const socket = new ReconnectingSocket("wss://api.hyperliquid.xyz/ws");
     socketRef.current = socket;
-    let burstInFrame = 0;
+
+    let pendingL2: ParsedL2 | null = null;
+    let msgsInBookFrame = 0;
+    let bookRafId: number | null = null;
+
+    const scheduleBookFrame = () => {
+      if (bookRafId !== null) return;
+      bookRafId = requestAnimationFrame(() => {
+        bookRafId = null;
+        const parsed = pendingL2;
+        const burst = msgsInBookFrame;
+        pendingL2 = null;
+        msgsInBookFrame = 0;
+        if (!parsed) return;
+
+        const nextSnap = snapshotFromLevels(parsed.bids, parsed.asks);
+        const deltas = diffSnapshot(prevSnapshotRef.current, nextSnap);
+        bookRef.current = applyDeltas(bookRef.current, deltas);
+        prevSnapshotRef.current = nextSnap;
+        pendingWsBurstRef.current = burst;
+        requestRender();
+      });
+    };
 
     const offStatus = socket.on("status", (st) => {
       setStatus(st);
@@ -133,21 +159,9 @@ export function RafBatcherDemo() {
       if (!parsed) return;
 
       wsMessagesRef.current += 1;
-      burstInFrame += 1;
-
-      const nextSnap = snapshotFromLevels(parsed.bids, parsed.asks);
-      const deltas = diffSnapshot(prevSnapshotRef.current, nextSnap);
-      bookRef.current = applyDeltas(bookRef.current, deltas);
-      prevSnapshotRef.current = nextSnap;
-
-      requestRender();
-
-      requestAnimationFrame(() => {
-        if (burstInFrame > 0) {
-          pendingWsBurstRef.current = burstInFrame;
-          burstInFrame = 0;
-        }
-      });
+      msgsInBookFrame += 1;
+      pendingL2 = parsed;
+      scheduleBookFrame();
     });
 
     socket.connect();
@@ -159,29 +173,69 @@ export function RafBatcherDemo() {
     return () => {
       offStatus();
       offMessage();
+      if (bookRafId !== null) cancelAnimationFrame(bookRafId);
       batcherRef.current?.cancel();
       socket.close();
     };
   }, [requestRender, pushToReact]);
 
-  function simulateFlood(count: number) {
-    for (let i = 0; i < count; i++) {
-      const price = (2340 + (i % 5) * 0.1).toFixed(1);
-      bookRef.current = applyDelta(bookRef.current, {
-        side: "bid",
-        price,
-        size: String(1 + (i % 3)),
-      });
-      requestRender();
-    }
-    wsMessagesRef.current += count;
-    pendingWsBurstRef.current = count;
-    if (!batchedRef.current) {
-      pushToReact();
-    } else {
-      batcherRef.current?.schedule();
-    }
-  }
+  useEffect(() => {
+    return () => {
+      if (floodRafRef.current !== null) {
+        cancelAnimationFrame(floodRafRef.current);
+      }
+    };
+  }, []);
+
+  const simulateFlood = useCallback(
+    (count: number) => {
+      if (floodRafRef.current !== null) {
+        cancelAnimationFrame(floodRafRef.current);
+        floodRafRef.current = null;
+      }
+
+      const paintEach = !batchedRef.current && count <= FLOOD_UNBATCHED_MAX;
+      const { bids, asks } = bookRef.current;
+
+      if (paintEach) {
+        for (let i = 0; i < count; i++) {
+          const price = (2340 + (i % 5) * 0.1).toFixed(1);
+          bids.upsert(price, String(1 + (i % 3)));
+          bookRef.current = { bids, asks };
+          pushToReact();
+        }
+        wsMessagesRef.current += count;
+        pendingWsBurstRef.current = count;
+        return;
+      }
+
+      let index = 0;
+
+      const finish = () => {
+        floodRafRef.current = null;
+        bookRef.current = { bids, asks };
+        wsMessagesRef.current += count;
+        pendingWsBurstRef.current = count;
+        requestRender();
+      };
+
+      const step = () => {
+        const end = Math.min(index + FLOOD_CHUNK, count);
+        for (; index < end; index++) {
+          const price = (2340 + (index % 5) * 0.1).toFixed(1);
+          bids.upsert(price, String(1 + (index % 3)));
+        }
+        if (index < count) {
+          floodRafRef.current = requestAnimationFrame(step);
+        } else {
+          finish();
+        }
+      };
+
+      step();
+    },
+    [pushToReact, requestRender],
+  );
 
   const spread = useMemo(() => getSpread(book), [book]);
   const bidRows = useMemo(() => toRows(book, "bid"), [book]);
@@ -226,8 +280,8 @@ export function RafBatcherDemo() {
       </div>
 
       <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-100">
-        Same socket as kata 5 — rAF does not replace the network. It only batches{" "}
-        <strong>React paints</strong>. Counters use refs;{" "}
+        Live L2 and large floods are coalesced to one book apply per animation
+        frame, then one React paint when batching is on. Counters use refs;{" "}
         <code className="rounded bg-black/10 px-1 text-xs">setState</code> runs
         in <code className="rounded bg-black/10 px-1 text-xs">pushToReact</code>{" "}
         only.
@@ -244,7 +298,9 @@ export function RafBatcherDemo() {
           tone="bid"
           rows={bidRows}
           emptyLabel={
-            status === "open" ? "Waiting for book…" : "Flood or wait for live data"
+            status === "open"
+              ? "Waiting for book…"
+              : "Flood or wait for live data"
           }
         />
         <SidePanel
@@ -252,12 +308,27 @@ export function RafBatcherDemo() {
           tone="ask"
           rows={askRows}
           emptyLabel={
-            status === "open" ? "Waiting for book…" : "Flood or wait for live data"
+            status === "open"
+              ? "Waiting for book…"
+              : "Flood or wait for live data"
           }
         />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!batched}
+          title={
+            batched
+              ? undefined
+              : "Turn rAF batching ON — unbatched 10k paints crash dev tooling"
+          }
+          onClick={() => simulateFlood(10_000)}
+          className="rounded-lg border border-violet-600/50 bg-violet-600/15 px-4 py-2 text-sm font-semibold text-violet-950 disabled:opacity-40 dark:text-violet-100"
+        >
+          Flood 10,000 (1 render)
+        </button>
         <button
           type="button"
           onClick={() => simulateFlood(200)}
@@ -308,7 +379,9 @@ function StatCard({
       <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
         {label}
       </p>
-      <p className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${valueClass}`}>
+      <p
+        className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${valueClass}`}
+      >
         {value}
       </p>
       {hint && (
@@ -353,7 +426,7 @@ function SidePanel({
             {emptyLabel}
           </p>
         ) : (
-          <ul className="max-h-64 divide-y divide-neutral-200 overflow-y-auto dark:divide-neutral-800">
+          <ul className="max-h-96 divide-y divide-neutral-200 overflow-y-auto dark:divide-neutral-800">
             {rows.map((row) => (
               <li
                 key={`${title}-${row.price}`}

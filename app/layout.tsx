@@ -32,7 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${NotoSerif.variable} h-full w-full antialiased`}
     >
-      <body className="min-h-full w-full">
+      <body className="min-h-full w-full" suppressHydrationWarning>
         <AppSidebar>{children}</AppSidebar>
       </body>
     </html>

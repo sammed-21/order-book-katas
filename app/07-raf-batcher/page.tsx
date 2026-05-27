@@ -1,5 +1,4 @@
 import { RafBatcherDemo } from "./RafBatcherDemo";
-import { RafBatcherDemoSolution } from "./RafBatcherDemo.solution";
 
 export default function Page() {
   return (
@@ -13,10 +12,9 @@ export default function Page() {
         <p className="max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
           WebSocket updates the book in a ref immediately; rAF batches how often
           React repaints. Toggle batching and use Flood 200 to compare render
-          counts.
+          counts. Flood 10,000 with batching ON — renders should tick by ~1.
         </p>
       </header>
-      {/* <RafBatcherDemoSolution /> */}
       <RafBatcherDemo />
     </section>
   );
